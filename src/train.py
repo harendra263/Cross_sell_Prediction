@@ -27,10 +27,7 @@ if __name__ == "__main__":
     df = pd.read_csv(TRAINING_DATA)
     test = pd.read_csv(TEST_DATA)
 
-    # cat_cols = test.select_dtypes(include='object').columns.tolist()
-    # cat_cols.remove("Vehicle_Age")
-    
-    # df_test = preprocessing.data_prepreprocessing(df = test, object_cols=cat_cols)
+
 
     train_df = df[df.kfold.isin(FOLD_MAPPING.get(FOLD))].reset_index(drop=True)
     valid_df = df[df.kfold==FOLD].reset_index(drop=True)
@@ -38,8 +35,8 @@ if __name__ == "__main__":
     ytrain = train_df.Response.values
     yvalid = valid_df.Response.values
 
-    train_df = train_df.drop(["Response"], axis=1)
-    valid_df = valid_df.drop(["Response"], axis=1)
+    train_df = train_df.drop(["id", "kfold", "Response"], axis=1)
+    valid_df = valid_df.drop(["id", "kfold", "Response"], axis=1)
 
     valid_df = valid_df[train_df.columns]
 
@@ -47,7 +44,7 @@ if __name__ == "__main__":
     clf = dispatcher.MODELS[MODEL]
     print(clf)
     clf.fit(train_df, ytrain)
-    preds = clf.predict_proba(valid_df)[:, 1]
+    preds = clf.predict(valid_df)
     print(metrics.roc_auc_score(yvalid, preds))
 
     joblib.dump(clf, f'models/{MODEL}_{FOLD}.pkl')
